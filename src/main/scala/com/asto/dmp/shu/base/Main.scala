@@ -1,7 +1,7 @@
 package com.asto.dmp.shu.base
 
-import com.asto.dmp.shu.dao.impl.BizDao
-import com.asto.dmp.shu.service.impl.PrepareService
+import com.asto.dmp.shu.dao.impl.{BaseDao, BizDao}
+import com.asto.dmp.shu.service.impl.{CalculateService, PrepareService}
 import com.asto.dmp.shu.util._
 import org.apache.spark.Logging
 
@@ -18,17 +18,18 @@ object Main extends Logging {
     Constants.App.TIMESTAMP = args(0).toLong
     //从外部传入的是秒级别的时间戳，所以要乘以1000
     Constants.App.TODAY = DateUtils.timestampToStr(Constants.App.TIMESTAMP * 1000, "yyyyMM/dd")
-
-    //new PrepareService().run()
-
-/*    BizDao.getCategory.foreach(println)
-    BizDao.getCategoryDetails.foreach(println)*/
+   // new PrepareService().run()
+    //BizDao.getTempCategoryAndShu.foreach(println)
+    //BizDao.getSegSum.foreach(println)
+   // CalculateService.generateMiddleFiles
+    /*    BizDao.getCategory.foreach(println)
+        BizDao.getCategoryDetails.foreach(println)*/
 
     /*BizDao.getDup.foreach(println)*/
     //BizDao.getShu.sortBy(t => (t._2,t._3))foreach(println)
-    BizDao.getCategoryAndSearchNum.foreach(println)
-    println("###################")
-    //BizDao.getNoDup.foreach(println)
+    //BizDao.getDup2.foreach(println)
+
+    BizDao.getTrendData.foreach(println)
   }
 
   /**

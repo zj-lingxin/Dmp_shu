@@ -1,12 +1,13 @@
 package com.asto.dmp.shu.dao.impl
 
+import com.asto.dmp.shu.base.Constants
 import com.asto.dmp.shu.dao.SQL
-import com.asto.dmp.shu.util.DateUtils
+import com.asto.dmp.shu.util.{Utils, FileUtils, DateUtils}
 
 object BizDao {
   def unionShu() = {
     BaseDao.getShuProps()
-      .union(BaseDao.getShuProps())
+      .union(BaseDao.getShuNewProps())
       .map(a => (a(0).toString, a(1).toString, a(2).toString, a(3).toString, a(4).toString, a(5).toString, a(6).toString))
       .distinct()
   }
@@ -15,16 +16,16 @@ object BizDao {
    * 获取行业分类
    * 注意:type_id = '47'的是行业分类
    */
-  def getCategory = {
+  def getSeg = {
     BaseDao.getLinkageProps(SQL().select("id,type_id,name,sign_id").where("type_id = '47'"))
-      .map(a => (a(0).toString, a(1).toString, convertCategoryNameFor(a(2).toString), a(3).toString))
+      .map(a => (a(0).toString, a(1).toString, convertSegNameFor(a(2).toString), a(3).toString))
   }
 
   /**
    * 获取二级行业分类
    * 注意:type_id = '48'的是二级行业分类
    */
-  def getCategoryDetails = {
+  def getSegDetails = {
     BaseDao.getLinkageProps(SQL().select("pid,name,sign_id").where("type_id = '48'"))
       .map(a => (a(0).toString, a(1).toString, a(2).toString))
   }
@@ -50,12 +51,10 @@ object BizDao {
       .map(t => (t._1._1, t._1._2, t._1._3, t._2.sum))
   }
 
-  /**
-   * 返回：(服饰,连体裤,2011-07,4863271)
-   */
-  def getCategoryAndSearchNum = {
-    getCategory.map(t => (t._4, (t._1, t._2, t._3)))
-      .leftOuterJoin(getCategoryDetails.map(t => (t._1, (t._2, t._3)))) //(12,((1695,47,3C数码),Some((数码相机/单反相机/摄像机,1221))))
+
+  def getTempSegAndShu = {
+    getSeg.map(t => (t._4, (t._1, t._2, t._3)))
+      .leftOuterJoin(getSegDetails.map(t => (t._1, (t._2, t._3)))) //(12,((1695,47,3C数码),Some((数码相机/单反相机/摄像机,1221))))
       .filter(_._2._2.isDefined)
       .map(t => (t._2._2.get._2, (t._2._1._1, t._2._1._2, t._2._1._3, t._1, t._2._2.get._1))) //(1221,(1695,47,3C数码,12,数码相机/单反相机/摄像机))
       .leftOuterJoin(getKeyWords.map(t => (t._2, (t._1, t._3, t._4)))) //(1221,((1695,47,3C数码,12,数码相机/单反相机/摄像机),Some((2039,单反相机,11221101))))
@@ -63,27 +62,37 @@ object BizDao {
       .map(t => (t._2._2.get._1, (t._2._1._3, t._2._1._5, t._2._2.get._2, t._2._2.get._3)))
       .leftOuterJoin(getShu.map(t => (t._1, (t._2, t._3, t._4)))) //(1845,((服饰,女士内衣/男士内衣/家居服,男士保暖内衣,11012114),Some((男士保暖内衣,2013-05,10989))))
       .filter(_._2._2.isDefined)
-      .map(t => (t._2._1._1, t._2._2.get._1, t._2._2.get._2, t._2._2.get._3, t._2._1._2))
-      .distinct().sortBy(t=>(t._1,t._2,t._3,t._4)).persist()
+      .map(t => (t._2._1._1, t._2._1._2, t._2._2.get._1, t._2._2.get._2, t._2._2.get._3)).persist()
+  }
+
+  /**
+   * 返回：(服饰,连体裤,2011-07,4863271)
+   * @return
+   */
+  def getSegAndShu = {
+    getTempSegAndShu.distinct()
+      .map(t => ((t._1, t._3, t._4), t._5))
+      .groupByKey().map(t => (t._1._1, t._1._2, t._1._3, t._2.max)).persist()
   }
 
   /**
    * 不考虑分类，将同一年月下的关键词出现的次数
-   * 返回：((婚纱/礼服/旗袍,2012-06),3)
+   * 返回：(鞋包配饰,高跟单鞋,2015-06,187301,1)
    */
   def getKeywordsNum = {
-    val keywordsNum = getCategoryAndSearchNum.map(t => ((t._2, t._3), 1)).groupByKey().map(t => (t._1, t._2.sum)).persist()
-    getCategoryAndSearchNum
+    val keywordsNum = getSegAndShu.map(t => ((t._2, t._3), 1)).groupByKey().map(t => (t._1, t._2.sum)).persist()
+    getSegAndShu
       .map(t => ((t._2, t._3), (t._1, t._4)))
       .leftOuterJoin(keywordsNum) //((商务休闲鞋,2011-10),((鞋类箱包,18169),Some(1)))
-      .map(t => (t._2._1._1, t._1._1, t._1._2, t._2._1._2, t._2._2.getOrElse(0))).sortBy(t=>(t._1, t._2,t._3,t._4)).persist()
+      .map(t => (t._2._1._1, t._1._1, t._1._2, t._2._1._2, t._2._2.getOrElse(0)))
+      .sortBy(t => (t._1, t._2, t._3, t._4)).persist()
   }
 
   /**
    * 返回：(服装内衣,文胸套装,2012-08,217542)
    */
   def getDup = {
-    getKeywordsNum.filter(_._5 > 1).map(t => (t._1, t._2, t._3, t._4,t._5)).persist()
+    getKeywordsNum.filter(_._5 > 1).map(t => (t._1, t._2, t._3, t._4)).persist()
   }
 
   /**
@@ -98,32 +107,72 @@ object BizDao {
    * 返回：(鞋包配饰,2414180935)
    * @return
    */
-  def getShuByNoDupCategory = {
+  def getSegSum = {
     getNoDup.map(t => (t._1, t._4)).groupByKey().map(t => (t._1, t._2.sum))
   }
 
   /**
-   * getShuByNoDupCategory按Category拼接到getDup上
-   * 返回：(服装内衣,Hodo/红豆,2014-03,133865,5486880354)
+   * getShuByNoDupSeg按Seg拼接到getDup上
+   * 返回：
+   * 母婴用品,帆布鞋,2015-04,2273320,8565377774)
+   * (母婴用品,帆布鞋,2015-05,1647389,8565377774)
+   * (母婴用品,帆布鞋,2015-06,512664,8565377774)
+   * (母婴用品,打底裤,2015-06,1271524,8565377774)
+   * (母婴用品,棉衣,2015-06,14283,8565377774)
+   * (母婴用品,毛衣,2015-06,1142548,8565377774)
+   * (母婴用品,羽绒服,2015-06,54199,8565377774)
+   * (母婴用品,衬衫,2015-06,1331481,8565377774)
    */
   def getDup2 = {
-    getDup.map(t => (t._1,(t._2,t._3,t._4)))
-      .leftOuterJoin(getShuByNoDupCategory)
+    getDup.map(t => (t._1, (t._2, t._3, t._4)))
+      .leftOuterJoin(getSegSum)
       .filter(_._2._2.isDefined)
-      .map(t => (t._1,t._2._1._1,t._2._1._2,t._2._1._3,t._2._2.get)) //(服装内衣,Hodo/红豆,2014-03,133865,5486880354)
+      .map(t => (t._1, t._2._1._1, t._2._1._2, t._2._1._3, t._2._2.get)).persist() //(服装内衣,Hodo/红豆,2014-03,133865,5486880354)
   }
 
   /**
    * 对Dup2，按年月和关键字分组下，对shu_t求和，记为变量shu_tt。计算新变量shu_n = shu * (shu_t / shu_tt)
    */
   def getDup3 = {
-    //getDup2.map(t => ((t._2,t._3),))
+    val groupByMonthAndKeyWordRDD = getDup2.map(t => ((t._2, t._3), t._5)).groupByKey().map(t => (t._1, t._2.sum)) //((T恤,2015-06),12479104132)
+    getDup2.map(t => ((t._2, t._3), (t._1, t._4, t._5))).leftOuterJoin(groupByMonthAndKeyWordRDD) //1、 ((T恤,2015-02),((母婴用品,900013,8565377774),Some(12199677962)))    2、((T恤,2015-02),((运动户外,900013,3634300188),Some(12199677962)))
+      .map(t => (t._2._1._1, t._1._1, t._1._2, t._2._1._2, t._2._1._3, t._2._2.get)) //(家纺居家/家具建材,餐椅,2012-03,180502,1563286725,10128664499)
+      .map(t => (t._1, t._2, t._3, t._4, t._5, t._6, ((t._5.toDouble / t._6.toDouble) * t._4.toDouble).toLong)).persist()
+  }
+
+  def getAllData = {
+    getNoDup.union(getDup3.map(t => (t._1, t._2, t._3, t._7))).persist()
+  }
+
+  /**
+   * 返回：(手机数码,2015-05,32003587)
+   */
+  def getModelData = {
+    getAllData.map(t => ((t._1, t._3), t._4)).groupByKey().map(t => (t._1._1, t._1._2, t._2.sum)).persist()
+  }
+
+  def getSeasonIndex = {
+    val groupBySegAndMonthRDD = getModelData.map(t => ((t._1, t._2.substring(5, 7)), t._3))
+      .groupByKey() //((运动户外,11),CompactBuffer(52917912, 124030548, 85641153, 19586667, 86958726))
+      .map(t => (t._1._1, t._1._2, t._2.sum / t._2.size)).persist() //(母婴用品,11(月份),278707587)
+    val groupBySegRDD = groupBySegAndMonthRDD.map(t => (t._1, t._3))
+        .groupByKey()
+        .map(t => (t._1, t._2.sum / t._2.size)) //(母婴用品,171195799)
+    groupBySegAndMonthRDD.map(t => (t._1, (t._2, t._3)))
+      .leftOuterJoin(groupBySegRDD) //(运动户外,((05,82821713),Some(72444321)))
+      .map(t => (t._1, t._2._1._1, t._2._1._2, t._2._2.get, t._2._1._2.toDouble / t._2._2.get.toDouble))
+  }
+
+  def getTrendData = {
+    getModelData.map(t => ((t._1, t._2.substring(5, 7)), (t._2, t._3)))
+      .leftOuterJoin(getSeasonIndex.map(t => ((t._1, t._2), t._5))) //((美食特产,09),((2013-09,5816756),Some(0.9595659959115557)))
+      .map(t => (t._1._1, t._2._1._1, t._2._1._2, Utils.retainDecimal(t._2._2.get, 5), t._2._1._2 / t._2._2.get, "actual"))
   }
 
   /**
    * 该方法最好从文件中读取(有时间就修改)
    */
-  def convertCategoryNameFor(oldCategoryName: String) = {
+  def convertSegNameFor(oldCategoryName: String) = {
     oldCategoryName match {
       case "服饰" => "服装内衣"
       case "鞋类箱包" => "鞋包配饰"

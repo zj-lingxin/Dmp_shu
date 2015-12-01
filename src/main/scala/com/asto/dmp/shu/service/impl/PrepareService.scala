@@ -11,6 +11,6 @@ object PrepareService {
 
 class PrepareService extends Service {
   override protected def runServices(): Unit = {
-    FileUtils.saveAsTextFile(BizDao.unionShu(),Constants.OutputPath.SYCM_SHU_ALL)
+    FileUtils.saveAsTextFile(BizDao.unionShu(),Constants.InputPath.SYCM_SHU_ALL)
   }
 }

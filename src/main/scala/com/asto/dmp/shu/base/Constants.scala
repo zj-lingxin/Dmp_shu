@@ -13,6 +13,7 @@ object Constants {
     var TIMESTAMP: Long = _
     val ERROR_LOG: StringBuffer = new StringBuffer("")
     var MESSAGES: StringBuffer = new StringBuffer("")
+    val GENERATE_MIDDLE_DATA = true
   }
   
   object Hadoop {
@@ -26,6 +27,7 @@ object Constants {
     private val OFFLINE_DIR = s"${App.DIR}/input/offline/${App.TODAY}/${App.TIMESTAMP}"
     val SYCM_SHU = s"$OFFLINE_DIR/datag_sycm_shu"
     val SYCM_SHU_NEW = s"$OFFLINE_DIR/datag_sycm_shu_new"
+    val SYCM_SHU_ALL= s"$OFFLINE_DIR/datag_sycm_shu_all"
     val LINKAGE = s"$OFFLINE_DIR/linkage"
   }
   
@@ -34,8 +36,17 @@ object Constants {
   object OutputPath {
     val SEPARATOR = "\t"
     private val OFFLINE_DIR = s"${App.DIR}/output/offline/${App.TODAY}/${App.TIMESTAMP}"
-    val SYCM_SHU_ALL= s"$OFFLINE_DIR/datag_sycm_shu_all"
-
+    val TEMP_SEG_AND_SHU = s"$OFFLINE_DIR/tempSegAndShu"
+    val SEG_AND_SHU = s"$OFFLINE_DIR/segAndShu"
+    val SEG_SUM = s"$OFFLINE_DIR/segSum"
+    val NO_DUP = s"$OFFLINE_DIR/noDup"
+    val DUP = s"$OFFLINE_DIR/dup1"
+    val DUP2 = s"$OFFLINE_DIR/dup2"
+    val DUP3 = s"$OFFLINE_DIR/dup3"
+    val ALL_DATA= s"$OFFLINE_DIR/allData"
+    val MODEL_DATA= s"$OFFLINE_DIR/modelData"
+    val SEASON_INDEX = s"$OFFLINE_DIR/seasonIndex"
+    val TREND_DATA = s"$OFFLINE_DIR/trendData"
   }
 
   /** 表的模式 **/
