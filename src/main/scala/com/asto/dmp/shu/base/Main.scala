@@ -1,7 +1,7 @@
 package com.asto.dmp.shu.base
 
 import com.asto.dmp.shu.dao.impl.{BaseDao, BizDao}
-import com.asto.dmp.shu.service.impl.{CalculateService, PrepareService}
+import com.asto.dmp.shu.service.impl.{TrendDataService, ResultService, PrepareService}
 import com.asto.dmp.shu.util._
 import org.apache.spark.Logging
 
@@ -19,6 +19,8 @@ object Main extends Logging {
     //从外部传入的是秒级别的时间戳，所以要乘以1000
     Constants.App.TODAY = DateUtils.timestampToStr(Constants.App.TIMESTAMP * 1000, "yyyyMM/dd")
    // new PrepareService().run()
+   // new TrendDataService().run()
+
     //BizDao.getTempCategoryAndShu.foreach(println)
     //BizDao.getSegSum.foreach(println)
    // CalculateService.generateMiddleFiles
@@ -28,8 +30,8 @@ object Main extends Logging {
     /*BizDao.getDup.foreach(println)*/
     //BizDao.getShu.sortBy(t => (t._2,t._3))foreach(println)
     //BizDao.getDup2.foreach(println)
+    BizDao.getLast12MonthsTrendData.foreach(println)
 
-    BizDao.getTrendData.foreach(println)
   }
 
   /**

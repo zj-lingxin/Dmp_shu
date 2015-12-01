@@ -13,7 +13,7 @@ object Constants {
     var TIMESTAMP: Long = _
     val ERROR_LOG: StringBuffer = new StringBuffer("")
     var MESSAGES: StringBuffer = new StringBuffer("")
-    val GENERATE_MIDDLE_DATA = true
+    val GENERATE_MIDDLE_DATA = false
   }
   
   object Hadoop {
@@ -55,5 +55,7 @@ object Constants {
     val SYCM_SHU = "id,type_id,type_name,gmt_target,shu,gmt_created,gmt_modified"
 
     val LINKAGE = "id,status,sort,type_id,pid,name,value,addtime,addip,sign_id"
+
+    val TREND_DATA = "seg,year_month,shu_seg,ratio_season,trend,flag"
   }
 }
