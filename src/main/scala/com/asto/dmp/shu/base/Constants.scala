@@ -8,10 +8,8 @@ object Constants {
     val LOG_WRAPPER = "##########"
     val YEAR_MONTH_DAY_FORMAT = "yyyy-MM-dd"
     val YEAR_MONTH_FORMAT = "yyyy-MM"
-    val DIR = s"${Hadoop.DEFAULT_FS}/ycd"
+    val DIR = s"${Hadoop.DEFAULT_FS}/shu"
     var TODAY: String = _
-    var STORE_ID: String = _
-    var RUN_CODE: String = _
     var TIMESTAMP: Long = _
     val ERROR_LOG: StringBuffer = new StringBuffer("")
     var MESSAGES: StringBuffer = new StringBuffer("")
@@ -25,26 +23,26 @@ object Constants {
   object InputPath {
     val SEPARATOR = "\t"
 
-    private val OFFLINE_DIR = s"${App.DIR}/input/offline/${App.TODAY}"
-    val SYCM_SHU = s"$OFFLINE_DIR/${App.TIMESTAMP}/datag_sycm_shu"
-    val SYCM_SHU_NEW = s"$OFFLINE_DIR/${App.TIMESTAMP}/datag_sycm_shu_new"
-    val LINKAGE = s"$OFFLINE_DIR/${App.TIMESTAMP}/linkage"
+    private val OFFLINE_DIR = s"${App.DIR}/input/offline/${App.TODAY}/${App.TIMESTAMP}"
+    val SYCM_SHU = s"$OFFLINE_DIR/datag_sycm_shu"
+    val SYCM_SHU_NEW = s"$OFFLINE_DIR/datag_sycm_shu_new"
+    val LINKAGE = s"$OFFLINE_DIR/linkage"
   }
   
 
   /** 输出文件路径 **/
   object OutputPath {
     val SEPARATOR = "\t"
-    private val ONLINE_DIR = s"${App.DIR}/output/online/${App.TODAY}/${App.STORE_ID}_${App.TIMESTAMP}"
     private val OFFLINE_DIR = s"${App.DIR}/output/offline/${App.TODAY}/${App.TIMESTAMP}"
+    val SYCM_SHU_ALL= s"$OFFLINE_DIR/datag_sycm_shu_all"
 
   }
 
   /** 表的模式 **/
   object Schema {
     //关键字表：id,三级类目的主键ID（linkage表的主键, pid=49),三级类目的名称,抓取目标日期,淘宝指数,创建时间,更新时间
-    val SYCM_SHU = "id,type_id,type_name,gmt_target,shu,gmt_created,gmt_modified,gmt_modified"
-    val SYCM_SHU_NEW = SYCM_SHU
-    val LINKAGE = "id,status,sort,type_id,pid,name,value,addtime,addip,sign_id,,,,"
+    val SYCM_SHU = "id,type_id,type_name,gmt_target,shu,gmt_created,gmt_modified"
+
+    val LINKAGE = "id,status,sort,type_id,pid,name,value,addtime,addip,sign_id"
   }
 }

@@ -1,5 +1,7 @@
 package com.asto.dmp.shu.base
 
+import com.asto.dmp.shu.dao.impl.BizDao
+import com.asto.dmp.shu.service.impl.PrepareService
 import com.asto.dmp.shu.util._
 import org.apache.spark.Logging
 
@@ -13,21 +15,20 @@ object Main extends Logging {
   }
 
   private def runServicesBy(args: Array[String]) {
-    Constants.App.TIMESTAMP = args(1).toLong
+    Constants.App.TIMESTAMP = args(0).toLong
     //从外部传入的是秒级别的时间戳，所以要乘以1000
     Constants.App.TODAY = DateUtils.timestampToStr(Constants.App.TIMESTAMP * 1000, "yyyyMM/dd")
-    Constants.App.RUN_CODE = args(0)
-    args(0) match {
-      case "100" =>
-        Constants.App.STORE_ID = args(2)
 
-      case _ =>
-        logInfo(
-          Utils.logWrapper(
-            s"可选模型参数如下:\n"
-          )
-        )
-    }
+    //new PrepareService().run()
+
+/*    BizDao.getCategory.foreach(println)
+    BizDao.getCategoryDetails.foreach(println)*/
+
+    /*BizDao.getDup.foreach(println)*/
+    //BizDao.getShu.sortBy(t => (t._2,t._3))foreach(println)
+    BizDao.getCategoryAndSearchNum.foreach(println)
+    println("###################")
+    //BizDao.getNoDup.foreach(println)
   }
 
   /**
@@ -41,8 +42,8 @@ object Main extends Logging {
    * 判断传入的参数是否合法
    */
   private def argsIsIllegal(args: Array[String]) = {
-    if (Option(args).isEmpty || args.length < 2) {
-      logError(Utils.logWrapper("请传入程序参数:业务编号,时间戳"))
+    if (Option(args).isEmpty || args.length != 1) {
+      logError(Utils.logWrapper("请传入程序参数:时间戳"))
       true
     } else {
       false

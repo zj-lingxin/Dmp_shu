@@ -1,8 +1,8 @@
 package com.asto.dmp.shu.service
 
-import com.asto.dmp.ycd.base.{Constants, Contexts}
-import com.asto.dmp.ycd.util.Utils
-import com.asto.dmp.ycd.util.mail.MailAgent
+import com.asto.dmp.shu.base.{Constants, Contexts}
+import com.asto.dmp.shu.util.Utils
+import com.asto.dmp.shu.util.mail.MailAgent
 import org.apache.spark.Logging
 
 trait Service extends Logging {

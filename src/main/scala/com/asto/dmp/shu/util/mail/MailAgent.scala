@@ -3,7 +3,7 @@ package com.asto.dmp.shu.util.mail
 import java.util.{Date, Properties}
 import javax.mail._
 import javax.mail.internet._
-import com.asto.dmp.ycd.base.Props
+import com.asto.dmp.shu.base.Props
 
 object MailAgent {
   def apply(mail:Mail) = new MailAgent(mail)
