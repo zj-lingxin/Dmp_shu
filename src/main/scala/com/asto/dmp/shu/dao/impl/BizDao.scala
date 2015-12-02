@@ -1,8 +1,9 @@
 package com.asto.dmp.shu.dao.impl
 
-import com.asto.dmp.shu.base.Constants
+import com.asto.dmp.shu.base.Contexts
 import com.asto.dmp.shu.dao.SQL
-import com.asto.dmp.shu.util.{Utils, FileUtils, DateUtils}
+import com.asto.dmp.shu.util.DateUtils
+import org.apache.spark.rdd.RDD
 
 object BizDao {
   def unionShu() = {
@@ -151,6 +152,11 @@ object BizDao {
     getAllData.map(t => ((t._1, t._3), t._4)).groupByKey().map(t => (t._1._1, t._1._2, t._2.sum)).persist()
   }
 
+  /**
+   *
+   * 返回：(运动户外,05,82821713,72444321,1.1432464526791548)
+   * @return
+   */
   def getSeasonIndex = {
     val groupBySegAndMonthRDD = getModelData.map(t => ((t._1, t._2.substring(5, 7)), t._3))
       .groupByKey() //((运动户外,11),CompactBuffer(52917912, 124030548, 85641153, 19586667, 86958726))
@@ -160,13 +166,57 @@ object BizDao {
         .map(t => (t._1, t._2.sum / t._2.size)) //(母婴用品,171195799)
     groupBySegAndMonthRDD.map(t => (t._1, (t._2, t._3)))
       .leftOuterJoin(groupBySegRDD) //(运动户外,((05,82821713),Some(72444321)))
-      .map(t => (t._1, t._2._1._1, t._2._1._2, t._2._2.get, t._2._1._2.toDouble / t._2._2.get.toDouble))
+      .map(t => (t._1, t._2._1._1, t._2._1._2, t._2._2.get, t._2._1._2.toDouble / t._2._2.get.toDouble)).persist()
   }
 
   def getTrendData = {
     getModelData.map(t => ((t._1, t._2.substring(5, 7)), (t._2, t._3)))
       .leftOuterJoin(getSeasonIndex.map(t => ((t._1, t._2), t._5))) //((美食特产,09),((2013-09,5816756),Some(0.9595659959115557)))
-      .map(t => (t._1._1, t._2._1._1, t._2._1._2, Utils.retainDecimal(t._2._2.get, 5), t._2._1._2 / t._2._2.get, "actual"))
+      .map(t => (t._1._1, t._2._1._1, t._2._1._2, t._2._2.get, (t._2._1._2 / t._2._2.get).toLong, "actual"))
+      .sortBy(t => (t._1, t._2), ascending = false)
+  }
+
+  /**
+   * 返回：(运动户外,2016-05,28464315,forecast)
+   * @return
+   */
+  def getTrendForecast = {
+    val trendDataRDD = BaseDao.getTrendDataProps().map(a => (a(0).toString, a(1).toString, a(4).toString.toLong, a(5).toString)) //家纺居家/家具建材, 2013-06, 29675712, 1.158771800384471, 25609625, actual
+    val trendForecastArray = getTrendDataForLastSomeMonths(12, trendDataRDD).union(getForecastData(trendDataRDD)).distinct().collect().sortBy(t => (t._1, t._2))
+    Contexts.sparkContext.parallelize(trendForecastArray)
+  }
+
+  def getFinalForecast = {
+    getTrendForecast.map(t => ((t._1, t._2.substring(5, 7)), (t._2, t._3, t._4)))
+      .leftOuterJoin(getSeasonIndex.map(t => ((t._1, t._2), t._5))) //((运动户外,01),((2015-01,40848341,actual),Some(0.8284926019252772)))
+      .map(t => (t._1._1, t._2._1._1, t._2._1._2, t._2._2.getOrElse(1D), t._2._1._3))
+      .map(t => (t._1, t._2, t._3, t._4, (t._3 * t._4).toLong, t._5))
+      .sortBy(t => (t._1, t._2))
+  }
+
+  private def getForecastData(trendDataRDD: RDD[(String, String, Long, String)]) = {
+    var rdd = forecastNextMonth(trendDataRDD)
+    (1 to 5).foreach { _ => rdd = forecastNextMonth(rdd) }
+    rdd.filter(t => t._4 == "forecast")
+  }
+
+  private def forecastNextMonth(trendDataRDD: RDD[(String, String, Long, String)]) = {
+    val last12MonthsTrendDataRDD = getTrendDataForLastSomeMonths(12, trendDataRDD)
+    val lastMonthsTrendDataRDD = getTrendDataForLastSomeMonths(1, trendDataRDD)
+    val forestRDD = lastMonthsTrendDataRDD.map(t => (t._1, DateUtils.monthsAgoForDate(-1, t._2, "yyyy-MM")))
+      .leftOuterJoin(last12MonthsTrendDataRDD
+      .map(t => (t._1, t._3)).groupByKey()
+      .map(t => (t._1, t._2.sum / t._2.size))) //(美食特产,(2015-12,Some(5695889)))
+      .map(t => (t._1, t._2._1, t._2._2.get, "forecast"))
+    last12MonthsTrendDataRDD.union(forestRDD).sortBy(t => (t._1, t._2), ascending = false)
+  }
+
+  private def getTrendDataForLastSomeMonths(num: Int, trendDataRDD: RDD[(String, String, Long, String)]) = {
+    val lastSomeMonths = trendDataRDD.map(t => (t._1, t._2)).groupByKey().map(t => (t._1, t._2.toSeq.sorted.reverse.take(num)))
+    trendDataRDD.map(t => (t._1, (t._2, t._3, t._4))).leftOuterJoin(lastSomeMonths)
+      .map(t => (t._1, t._2._1._1, t._2._1._2, t._2._1._3, t._2._2.get))
+      .filter(t => t._5.contains(t._2))
+      .map(t => (t._1, t._2, t._3, t._4)) //(家纺居家/家具建材,2015-06,46656771,1.158771800384471,40263985)
   }
 
   /**

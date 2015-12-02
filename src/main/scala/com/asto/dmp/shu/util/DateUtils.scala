@@ -3,7 +3,7 @@ package com.asto.dmp.shu.util
 import java.text.SimpleDateFormat
 import java.util.{Date, Calendar}
 
-object DateUtils extends scala.Serializable {
+object DateUtils  {
   private val cal = Calendar.getInstance()
 
   /**
@@ -12,17 +12,16 @@ object DateUtils extends scala.Serializable {
    */
   def getStrDate(formatText: String): String = getStrDate(Calendar.getInstance(), formatText)
 
-
   /**
    * 获取当前系统日期。
    * 参数calendar可以调节日期，如调到12个月之前，并且使用formatText格式输出
    * 参数可以是任意的yyyy MM dd HH mm ss组合,如"yyyy-MM-dd"、"yyyy-MM/dd"。
    * 如果不传参数，则默认是"yyyy-MM-dd"
    */
-  def getStrDate(calendar: Calendar, formatText: String = "yyyy-MM-dd") =
+  def getStrDate(calendar: Calendar, formatText: String) =
     new java.text.SimpleDateFormat(formatText).format(calendar.getTime)
 
-  def calendarToStr(calendar: Calendar, formatText: String = "yyyy-MM-dd") = getStrDate(calendar, formatText)
+  def calendarToStr(calendar: Calendar, formatText: String) = getStrDate(calendar, formatText)
 
   /**
    * 获取当前系统日期。
@@ -33,19 +32,24 @@ object DateUtils extends scala.Serializable {
   /**
    * 倒推出m天之前的日期，并以formatText格式以字符串形式输出
    */
-  def daysAgo(m: Int = 0, formatText: String = "yyyy-MM-dd"): String =
+  def daysAgo(m: Int = 0, formatText: String): String =
     timeAgo(m, Calendar.DATE, formatText)
 
   /**
    * 倒推出m月之前的日期，并以formatText格式以字符串形式输出
    */
-  def monthsAgo(m: Int = 0, formatText: String = "yyyy-MM-dd"): String =
+  def monthsAgo(m: Int = 0, formatText: String): String = {
     timeAgo(m, Calendar.MONTH, formatText)
+  }
+
+  def monthsAgoForDate(m: Int = 0, oldTime: String, formatText: String): String = {
+    timeAgoForCal(m, strToCalendar(oldTime, formatText), Calendar.MONTH, formatText)
+  }
 
   /**
    * 倒推出m月之前的月份以及该月的最大日期，并以formatText格式以字符串形式输出
    */
-  def monthsAgoWithMaxDay(m: Int = 0, formatText: String = "yyyy-MM-dd"): String = {
+  def monthsAgoWithMaxDay(m: Int = 0, formatText: String): String = {
     val cal = Calendar.getInstance()
     cal.add(Calendar.MONTH, -m + 1)
     cal.set(Calendar.DATE, 1)
@@ -53,7 +57,7 @@ object DateUtils extends scala.Serializable {
     getStrDate(cal, formatText)
   }
 
-  def weeksAgo(m: Int = 0, formatText: String = "yyyy-MM-dd"):(String, String) = {
+  def weeksAgo(m: Int = 0, formatText: String):(String, String) = {
     val weekBegin = Calendar.getInstance()
     val weekEnd = Calendar.getInstance()
     val dayOfWeekForEnglish = weekBegin.get(Calendar.DAY_OF_WEEK)
@@ -70,11 +74,16 @@ object DateUtils extends scala.Serializable {
   /**
    * 倒推出m年之前的日期，并以formatText格式以字符串形式输出
    */
-  def yearAgo(m: Int = 0, formatText: String = "yyyy-MM-dd"): String =
+  def yearAgo(m: Int = 0, formatText: String): String =
     timeAgo(m, Calendar.YEAR, formatText)
 
-  def timeAgo(m: Int = 0, field: Int = Calendar.DATE, formatText: String = "yyyy-MM-dd"): String = {
+  def timeAgo(m: Int = 0, field: Int , formatText: String): String = {
     val cal = Calendar.getInstance()
+    cal.add(field, -m)
+    getStrDate(cal, formatText)
+  }
+
+  def timeAgoForCal(m: Int = 0, cal: Calendar, field: Int, formatText: String): String = {
     cal.add(field, -m)
     getStrDate(cal, formatText)
   }
@@ -121,7 +130,7 @@ object DateUtils extends scala.Serializable {
   /**
    * 将String类型的日期转化为Calendar
    */
-  def strToCalendar(strDate: String, formatText: String = "yyyy-MM-dd"): Calendar = {
+  def strToCalendar(strDate: String, formatText: String): Calendar = {
     val sdf = new SimpleDateFormat(formatText)
     val date = sdf.parse(strDate)
     val calendar = Calendar.getInstance()
@@ -129,7 +138,7 @@ object DateUtils extends scala.Serializable {
     calendar
   }
 
-  def strToDate(strDate: String, formatText: String = "yyyy-MM-dd"): Date = {
+  def strToDate(strDate: String, formatText: String): Date = {
     val sdf = new SimpleDateFormat(formatText)
     sdf.parse(strDate)
   }
@@ -138,12 +147,12 @@ object DateUtils extends scala.Serializable {
     dateToStr(strToDate(strDate, oldFormat), newFormat)
 
 
-  def dateToStr(date: Date, formatText: String = "yyyy-MM-dd"): String = {
+  def dateToStr(date: Date, formatText: String): String = {
     val sdf = new SimpleDateFormat(formatText)
     sdf.format(date)
   }
 
-  def getTotalDayInMonth(strDate: String, formatText: String = "yyyy-MM-dd") =
+  def getTotalDayInMonth(strDate: String, formatText: String) =
     strToCalendar(strDate, formatText).getActualMaximum(Calendar.DAY_OF_MONTH)
 
   /**

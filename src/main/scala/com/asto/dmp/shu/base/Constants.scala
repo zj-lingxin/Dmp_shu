@@ -13,7 +13,7 @@ object Constants {
     var TIMESTAMP: Long = _
     val ERROR_LOG: StringBuffer = new StringBuffer("")
     var MESSAGES: StringBuffer = new StringBuffer("")
-    val GENERATE_MIDDLE_DATA = false
+    var SAVE_MIDDLE_FILES = false
   }
   
   object Hadoop {
@@ -47,6 +47,9 @@ object Constants {
     val MODEL_DATA= s"$OFFLINE_DIR/modelData"
     val SEASON_INDEX = s"$OFFLINE_DIR/seasonIndex"
     val TREND_DATA = s"$OFFLINE_DIR/trendData"
+    val TREND_FORECAST = s"$OFFLINE_DIR/trendForecast"
+    val FINAL_FORECAST = s"$OFFLINE_DIR/finalForecast"
+
   }
 
   /** 表的模式 **/
