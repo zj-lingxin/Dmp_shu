@@ -4,6 +4,7 @@ import com.asto.dmp.shu.base.Contexts
 import com.asto.dmp.shu.dao.SQL
 import com.asto.dmp.shu.util.DateUtils
 import org.apache.spark.rdd.RDD
+import org.apache.spark.storage.StorageLevel
 
 object BizDao {
   def unionShu() = {
@@ -49,7 +50,7 @@ object BizDao {
       .map(a => (a(0).toString, a(1).toString, DateUtils.strToStr(a(2).toString, "yyyy-MM-dd hh:mm:ss", "yyyy-MM"), a(3).toString.toLong))
       .map(t => ((t._1, t._2, t._3), t._4))
       .groupByKey()
-      .map(t => (t._1._1, t._1._2, t._1._3, t._2.sum))
+      .map(t => (t._1._1, t._1._2, t._1._3, t._2.sum)).persist(StorageLevel.MEMORY_AND_DISK)
   }
 
 
@@ -63,7 +64,7 @@ object BizDao {
       .map(t => (t._2._2.get._1, (t._2._1._3, t._2._1._5, t._2._2.get._2, t._2._2.get._3)))
       .leftOuterJoin(getShu.map(t => (t._1, (t._2, t._3, t._4)))) //(1845,((服饰,女士内衣/男士内衣/家居服,男士保暖内衣,11012114),Some((男士保暖内衣,2013-05,10989))))
       .filter(_._2._2.isDefined)
-      .map(t => (t._2._1._1, t._2._1._2, t._2._2.get._1, t._2._2.get._2, t._2._2.get._3)).persist()
+      .map(t => (t._2._1._1, t._2._1._2, t._2._2.get._1, t._2._2.get._2, t._2._2.get._3)).persist(StorageLevel.MEMORY_AND_DISK)
   }
 
   /**
@@ -73,7 +74,7 @@ object BizDao {
   def getSegAndShu = {
     getTempSegAndShu.distinct()
       .map(t => ((t._1, t._3, t._4), t._5))
-      .groupByKey().map(t => (t._1._1, t._1._2, t._1._3, t._2.max)).persist()
+      .groupByKey().map(t => (t._1._1, t._1._2, t._1._3, t._2.max)).persist(StorageLevel.MEMORY_AND_DISK)
   }
 
   /**
@@ -81,7 +82,7 @@ object BizDao {
    * 返回：(鞋包配饰,高跟单鞋,2015-06,187301,1)
    */
   def getKeywordsNum = {
-    val keywordsNum = getSegAndShu.map(t => ((t._2, t._3), 1)).groupByKey().map(t => (t._1, t._2.sum)).persist()
+    val keywordsNum = getSegAndShu.map(t => ((t._2, t._3), 1)).groupByKey().map(t => (t._1, t._2.sum)).persist(StorageLevel.MEMORY_AND_DISK)
     getSegAndShu
       .map(t => ((t._2, t._3), (t._1, t._4)))
       .leftOuterJoin(keywordsNum) //((商务休闲鞋,2011-10),((鞋类箱包,18169),Some(1)))
@@ -93,7 +94,7 @@ object BizDao {
    * 返回：(服装内衣,文胸套装,2012-08,217542)
    */
   def getDup = {
-    getKeywordsNum.filter(_._5 > 1).map(t => (t._1, t._2, t._3, t._4)).persist()
+    getKeywordsNum.filter(_._5 > 1).map(t => (t._1, t._2, t._3, t._4)).persist(StorageLevel.MEMORY_AND_DISK)
   }
 
   /**
@@ -101,7 +102,7 @@ object BizDao {
    * 返回：(服装内衣,女士棒球帽,2013-08,75393)
    */
   def getNoDup = {
-    getKeywordsNum.filter(_._5 == 1).map(t => (t._1, t._2, t._3, t._4)).persist()
+    getKeywordsNum.filter(_._5 == 1).map(t => (t._1, t._2, t._3, t._4)).persist(StorageLevel.MEMORY_AND_DISK)
   }
 
   /**
@@ -128,7 +129,7 @@ object BizDao {
     getDup.map(t => (t._1, (t._2, t._3, t._4)))
       .leftOuterJoin(getSegSum)
       .filter(_._2._2.isDefined)
-      .map(t => (t._1, t._2._1._1, t._2._1._2, t._2._1._3, t._2._2.get)).persist() //(服装内衣,Hodo/红豆,2014-03,133865,5486880354)
+      .map(t => (t._1, t._2._1._1, t._2._1._2, t._2._1._3, t._2._2.get)).persist(StorageLevel.MEMORY_AND_DISK) //(服装内衣,Hodo/红豆,2014-03,133865,5486880354)
   }
 
   /**
@@ -138,18 +139,18 @@ object BizDao {
     val groupByMonthAndKeyWordRDD = getDup2.map(t => ((t._2, t._3), t._5)).groupByKey().map(t => (t._1, t._2.sum)) //((T恤,2015-06),12479104132)
     getDup2.map(t => ((t._2, t._3), (t._1, t._4, t._5))).leftOuterJoin(groupByMonthAndKeyWordRDD) //1、 ((T恤,2015-02),((母婴用品,900013,8565377774),Some(12199677962)))    2、((T恤,2015-02),((运动户外,900013,3634300188),Some(12199677962)))
       .map(t => (t._2._1._1, t._1._1, t._1._2, t._2._1._2, t._2._1._3, t._2._2.get)) //(家纺居家/家具建材,餐椅,2012-03,180502,1563286725,10128664499)
-      .map(t => (t._1, t._2, t._3, t._4, t._5, t._6, ((t._5.toDouble / t._6.toDouble) * t._4.toDouble).toLong)).persist()
+      .map(t => (t._1, t._2, t._3, t._4, t._5, t._6, ((t._5.toDouble / t._6.toDouble) * t._4.toDouble).toLong)).persist(StorageLevel.MEMORY_AND_DISK)
   }
 
   def getAllData = {
-    getNoDup.union(getDup3.map(t => (t._1, t._2, t._3, t._7))).persist()
+    getNoDup.union(getDup3.map(t => (t._1, t._2, t._3, t._7))).persist(StorageLevel.MEMORY_AND_DISK)
   }
 
   /**
    * 返回：(手机数码,2015-05,32003587)
    */
   def getModelData = {
-    getAllData.map(t => ((t._1, t._3), t._4)).groupByKey().map(t => (t._1._1, t._1._2, t._2.sum)).persist()
+    getAllData.map(t => ((t._1, t._3), t._4)).groupByKey().map(t => (t._1._1, t._1._2, t._2.sum)).persist(StorageLevel.MEMORY_AND_DISK)
   }
 
   /**
@@ -166,7 +167,7 @@ object BizDao {
         .map(t => (t._1, t._2.sum / t._2.size)) //(母婴用品,171195799)
     groupBySegAndMonthRDD.map(t => (t._1, (t._2, t._3)))
       .leftOuterJoin(groupBySegRDD) //(运动户外,((05,82821713),Some(72444321)))
-      .map(t => (t._1, t._2._1._1, t._2._1._2, t._2._2.get, t._2._1._2.toDouble / t._2._2.get.toDouble)).persist()
+      .map(t => (t._1, t._2._1._1, t._2._1._2, t._2._2.get, t._2._1._2.toDouble / t._2._2.get.toDouble)).persist(StorageLevel.MEMORY_AND_DISK)
   }
 
   def getTrendData = {
