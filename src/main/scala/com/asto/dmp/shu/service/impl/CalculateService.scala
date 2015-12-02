@@ -27,6 +27,6 @@ object CalculateService extends Logging {
 
 class CalculateService extends Service {
   override protected def runServices() = {
-    if (Constants.App.GENERATE_MIDDLE_DATA) CalculateService.generateMiddleFiles
+    if (Constants.App.SAVE_MIDDLE_FILES) CalculateService.generateMiddleFiles
   }
 }
