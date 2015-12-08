@@ -183,7 +183,7 @@ object BizDao {
    */
   def getTrendForecast = {
     val trendDataRDD = BaseDao.getTrendDataProps().map(a => (a(0).toString, a(1).toString, a(4).toString.toLong, a(5).toString)) //家纺居家/家具建材, 2013-06, 29675712, 1.158771800384471, 25609625, actual
-    val trendForecastArray = getTrendDataForLastSomeMonths(12, trendDataRDD).union(getForecastData(trendDataRDD)).distinct().collect().sortBy(t => (t._1, t._2))
+    val trendForecastArray = getTrendDataForLastSomeMonths(Integer.MAX_VALUE, trendDataRDD).union(getForecastData(trendDataRDD)).distinct().collect().sortBy(t => (t._1, t._2))
     Contexts.sparkContext.parallelize(trendForecastArray)
   }
 

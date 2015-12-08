@@ -4,7 +4,6 @@ import com.asto.dmp.shu.base._
 import com.asto.dmp.shu.dao.{Dao, SQL}
 
 object BaseDao extends Dao {
-
   def getShuProps(sql: SQL = new SQL()) = getProps(Constants.InputPath.SYCM_SHU, Constants.Schema.SYCM_SHU, "sycm_shu", sql)
   def getShuNewProps(sql: SQL = new SQL()) = getProps(Constants.InputPath.SYCM_SHU_NEW, Constants.Schema.SYCM_SHU, "sycm_shu_new", sql)
   def getShuALLProps(sql: SQL = new SQL()) = getProps(Constants.InputPath.SYCM_SHU_ALL, Constants.Schema.SYCM_SHU, "sycm_shu_all", sql)
