@@ -10,6 +10,7 @@ object Contexts extends Logging {
   private var _hiveContext: HiveContext = _
   private var _sqlContext: SQLContext = _
 
+
   def hiveContext: HiveContext = {
     if (_hiveContext == null) {
       logInfo(Utils.logWrapper("对HiveContext进行实例化"))
@@ -22,6 +23,7 @@ object Contexts extends Logging {
     if (_sqlContext == null) {
       logInfo(Utils.logWrapper("对SQLContext进行实例化"))
       _sqlContext = new SQLContext(sparkContext)
+
     }
     _sqlContext
   }
