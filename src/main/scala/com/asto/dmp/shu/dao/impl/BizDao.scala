@@ -192,7 +192,7 @@ object BizDao {
       .leftOuterJoin(getSeasonIndex.map(t => ((t._1, t._2), t._5))) //((运动户外,01),((2015-01,40848341,actual),Some(0.8284926019252772)))
       .map(t => (t._1._1, t._2._1._1, t._2._1._2, t._2._2.getOrElse(1D), t._2._1._3))
       .map(t => (t._1, t._2, t._3, t._4, (t._3 * t._4).toLong, t._5))
-      .sortBy(t => (t._1, t._2))
+      .sortBy(t => (t._1, t._2)).persist()
   }
 
   private def getForecastData(trendDataRDD: RDD[(String, String, Long, String)]) = {

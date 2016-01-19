@@ -1,7 +1,9 @@
 package com.asto.dmp.shu.base
 
+import com.asto.dmp.shu.mq.MQAgent
 import com.asto.dmp.shu.service.impl.{TrendDataService, PrepareService}
 import com.asto.dmp.shu.util._
+
 import org.apache.spark.Logging
 
 object Main extends Logging {
@@ -37,6 +39,7 @@ object Main extends Logging {
    */
   private def closeResources() = {
     Contexts.stopSparkContext()
+    MQAgent.close()
   }
 
   /**

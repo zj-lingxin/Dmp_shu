@@ -7,12 +7,12 @@ import org.apache.spark.Logging
 
 trait Service extends Logging {
   protected val sqlContext = Contexts.sqlContext
-  protected var mailSubject: String = s"${getClass.getSimpleName}的run()方法出现异常"
+  protected var errorHend: String = s"${getClass.getSimpleName}的run()方法出现异常"
 
   protected def handlingExceptions(t: Throwable) {
-    MailAgent(t, mailSubject).sendMessage()
-    logError(mailSubject, t)
-    Constants.App.ERROR_LOG.append(s"$mailSubject\n${t.toString}\n${t.getStackTraceString}\n")
+    MailAgent(t, errorHend).sendMessage()
+    logError(errorHend, t)
+    Constants.App.ERROR_LOG.append(s"$errorHend\n${t.toString}\n${t.getStackTraceString}\n")
   }
 
   protected def printStartLog() = logInfo(Utils.logWrapper(s"开始运行${getClass.getSimpleName}的run()方法"))

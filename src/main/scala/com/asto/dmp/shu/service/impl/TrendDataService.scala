@@ -2,6 +2,7 @@ package com.asto.dmp.shu.service.impl
 
 import com.asto.dmp.shu.base.Constants
 import com.asto.dmp.shu.dao.impl.BizDao
+import com.asto.dmp.shu.mq.{MsgWrapper, MQAgent, Msg}
 import com.asto.dmp.shu.service.Service
 import com.asto.dmp.shu.util.FileUtils
 import org.apache.spark.Logging
@@ -27,6 +28,13 @@ object TrendDataService extends Logging {
       FileUtils.saveAsTextFile(BizDao.getTrendForecast, Constants.OutputPath.TREND_FORECAST)
     }
 
+    BizDao.getFinalForecast.collect().foreach {
+      line =>
+        val msgs = List(
+          new Msg("M_SHOP_MAJOR_BUSINESS", line._5, line._2)
+        )
+        MQAgent.send(MsgWrapper.getJson(line._1, msgs))
+    }
     FileUtils.saveAsTextFile(BizDao.getFinalForecast, Constants.OutputPath.FINAL_FORECAST)
   }
 }
