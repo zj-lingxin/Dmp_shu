@@ -19,6 +19,6 @@ object MsgWrapper {
   }
 }
 
-class Msg(val quotaCode: String, val quotaValue: Any, val targetTime: String , val indexFlag: String = "1", val quotaName: String = "")
+class Msg(val quotaCode: String, val quotaValue: Any, val targetTime: String , val indexFlag: String = "2", val quotaName: String = "")
 
 

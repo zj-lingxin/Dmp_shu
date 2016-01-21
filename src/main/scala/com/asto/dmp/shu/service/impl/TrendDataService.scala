@@ -35,6 +35,7 @@ object TrendDataService extends Logging {
         )
         MQAgent.send(MsgWrapper.getJson(line._1, msgs))
     }
+
     FileUtils.saveAsTextFile(BizDao.getFinalForecast, Constants.OutputPath.FINAL_FORECAST)
   }
 }

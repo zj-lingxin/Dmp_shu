@@ -1,6 +1,6 @@
 package com.asto.dmp.shu.base
 
-import com.asto.dmp.shu.mq.MQAgent
+import com.asto.dmp.shu.mq.{MsgWrapper, Msg, MQAgent}
 import com.asto.dmp.shu.service.impl.{TrendDataService, PrepareService}
 import com.asto.dmp.shu.util._
 
