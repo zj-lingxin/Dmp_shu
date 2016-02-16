@@ -7,12 +7,12 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
 
 object BizDao {
-  def unionShu() = {
+/*  def unionShu() = {
     BaseDao.getShuProps()
       .union(BaseDao.getShuNewProps())
       .map(a => (a(0).toString, a(1).toString, a(2).toString, a(3).toString, a(4).toString, a(5).toString, a(6).toString))
       .distinct()
-  }
+  }*/
 
   /**
    * 获取行业分类
@@ -20,7 +20,7 @@ object BizDao {
    */
   def getSeg = {
     BaseDao.getLinkageProps(SQL().select("id,type_id,name,sign_id").where("type_id = '47'"))
-      .map(a => (a(0).toString, a(1).toString, convertSegNameFor(a(2).toString), a(3).toString))
+      .map(a => (a(0).toString, a(1).toString, a(2).toString, a(3).toString))
   }
 
   /**
@@ -46,7 +46,7 @@ object BizDao {
    * @return
    */
   def getShu = {
-    BaseDao.getShuALLProps(SQL().select("type_id,type_name,gmt_target,shu").where(s"gmt_target < '${DateUtils.monthsAgo(0, "yyyy-MM-01 00:00:00")}' and gmt_target >= '${DateUtils.monthsAgo(61, "yyyy-MM-01 00:00:00")}'"))
+    BaseDao.getShuProps(SQL().select("type_id,type_name,gmt_target,shu").where(s"gmt_target < '${DateUtils.monthsAgo(0, "yyyy-MM-01 00:00:00")}' and gmt_target >= '${DateUtils.monthsAgo(61, "yyyy-MM-01 00:00:00")}'"))
       .map(a => (a(0).toString, a(1).toString, DateUtils.strToStr(a(2).toString, "yyyy-MM-dd hh:mm:ss", "yyyy-MM"), a(3).toString.toLong))
       .map(t => ((t._1, t._2, t._3), t._4))
       .groupByKey()
@@ -220,9 +220,7 @@ object BizDao {
       .map(t => (t._1, t._2, t._3, t._4)) //(家纺居家/家具建材,2015-06,46656771,1.158771800384471,40263985)
   }
 
-  /**
-   * 该方法最好从文件中读取(有时间就修改)
-   */
+/*
   def convertSegNameFor(oldCategoryName: String) = {
     oldCategoryName match {
       case "服饰" => "服装内衣"
@@ -242,6 +240,6 @@ object BizDao {
       case "服务大类" => "本地生活/虚拟服务/其他"
       case _ => oldCategoryName
     }
-  }
+  }*/
 
 }

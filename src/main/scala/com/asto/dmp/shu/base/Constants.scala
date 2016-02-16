@@ -26,8 +26,8 @@ object Constants {
 
     private val OFFLINE_DIR = s"${App.DIR}/input/offline/${App.TODAY}/${App.TIMESTAMP}"
     val SYCM_SHU = s"$OFFLINE_DIR/datag_sycm_shu"
-    val SYCM_SHU_NEW = s"$OFFLINE_DIR/datag_sycm_shu_new"
-    val SYCM_SHU_ALL= s"$OFFLINE_DIR/datag_sycm_shu_all"
+    //val SYCM_SHU_NEW = s"$OFFLINE_DIR/datag_sycm_shu_new"
+    //val SYCM_SHU_ALL= s"$OFFLINE_DIR/datag_sycm_shu_all"
     val LINKAGE = s"$OFFLINE_DIR/linkage"
   }
   
